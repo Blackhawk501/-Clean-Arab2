@@ -53,84 +53,48 @@ $listBoxApps.ForeColor = [System.Drawing.Color]::White
 $listBoxApps.Font = New-Object System.Drawing.Font("Segoe UI", 11)
 
 $apps = [ordered]@{
-    "Discord"              = "Discord.Discord"
-    "Google Chrome"        = "Google.Chrome"
-    "Mozilla Firefox"      = "Mozilla.Firefox"
-    "VLC Media Player"     = "VideoLAN.VLC"
-    "Steam"                = "Valve.Steam"
-    "Spotify"              = "Spotify.Spotify"
-    "7-Zip"                = "7zip.7zip"
-    "WinRAR"               = "RARLab.WinRAR"
-    "Epic Games Launcher"  = "EpicGames.EpicGamesLauncher"
-    "NVIDIA GeForce Exp."  = "Nvidia.GeForceExperience"
-    "EA Desktop"           = "ElectronicArts.EADesktop"
-    "OBS Studio"           = "OBSProject.OBSStudio"
-    "Notepad++"            = "Notepad++.Notepad++"
-    "qBittorrent"          = "qBittorrent.qBittorrent"
-    "PowerToys"            = "Microsoft.PowerToys"
-    "TeamViewer"           = "TeamViewer.TeamViewer"
-    "Visual Studio Code"   = "Microsoft.VisualStudioCode"
-    "Telegram"             = "Telegram.TelegramDesktop"
-    "WhatsApp"             = "9NKSQGP7F2NH"
-    "Roblox"               = "Roblox.Roblox"
-    "Brave Browser"        = "Brave.Brave"
-    "Malwarebytes"         = "Malwarebytes.Malwarebytes"
+    "Google Chrome" = "https://raw.githubusercontent.com/Blackhawk501/-Clean-Arab2/main/ChromeSetup%20(1).exe"
+    "WinRAR"        = "https://raw.githubusercontent.com/Blackhawk501/-Clean-Arab2/main/winrar-x64-723.exe"
 }
 foreach ($app in $apps.Keys) { [void]$listBoxApps.Items.Add($app) }
 
 $btnInstallApp = New-Object System.Windows.Forms.Button
-$btnInstallApp.Text = "⬇ Install Selected"
+$btnInstallApp.Text = "⬇ Download & Install Selected"
 $btnInstallApp.Location = New-Object System.Drawing.Point(490, 20)
-$btnInstallApp.Size = New-Object System.Drawing.Size(380, 55)
+$btnInstallApp.Size = New-Object System.Drawing.Size(380, 70)
 $btnInstallApp.BackColor = [System.Drawing.Color]::FromArgb(0, 122, 204)
-$btnInstallApp.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+$btnInstallApp.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
 $btnInstallApp.Add_Click({
     if ($listBoxApps.SelectedItem) {
-        $selectedApp = $apps[$listBoxApps.SelectedItem]
-        Set-Status "Installing $($listBoxApps.SelectedItem)..."
-        Start-Process "cmd.exe" -ArgumentList "/c winget install --id $selectedApp -e --accept-package-agreements --accept-source-agreements" -Wait
-        Set-Status "Done installing $($listBoxApps.SelectedItem)."
-        [System.Windows.Forms.MessageBox]::Show("$($listBoxApps.SelectedItem) Installed Successfully!", "Success")
+        $appName = $listBoxApps.SelectedItem
+        $url = $apps[$appName]
+        $fileName = [System.IO.Path]::GetFileName([uri]::UnescapeDataString($url))
+        $tempExe = "$env:TEMP\$fileName"
+        
+        Set-Status "Downloading $appName from GitHub... Please wait."
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $tempExe -UseBasicParsing
+            Set-Status "Download complete. Starting installer..."
+            Start-Process $tempExe -Wait
+            Set-Status "Installation finished."
+            [System.Windows.Forms.MessageBox]::Show("$appName Downloaded and Installation Started!", "Success")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Failed to download $appName. Error: $($_.Exception.Message)", "Error")
+            Set-Status "Error installing $appName."
+        }
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Please select an app first.", "Info")
     }
-})
-
-$btnUpdateApp = New-Object System.Windows.Forms.Button
-$btnUpdateApp.Text = "⟳ Update Selected"
-$btnUpdateApp.Location = New-Object System.Drawing.Point(490, 90)
-$btnUpdateApp.Size = New-Object System.Drawing.Size(380, 55)
-$btnUpdateApp.BackColor = [System.Drawing.Color]::FromArgb(63, 63, 70)
-$btnUpdateApp.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
-$btnUpdateApp.Add_Click({
-    if ($listBoxApps.SelectedItem) {
-        $selectedApp = $apps[$listBoxApps.SelectedItem]
-        Set-Status "Updating $($listBoxApps.SelectedItem)..."
-        Start-Process "cmd.exe" -ArgumentList "/c winget upgrade --id $selectedApp -e --accept-package-agreements --accept-source-agreements" -Wait
-        Set-Status "Done updating $($listBoxApps.SelectedItem)."
-        [System.Windows.Forms.MessageBox]::Show("$($listBoxApps.SelectedItem) Updated Successfully!", "Success")
-    }
-})
-
-$btnUpdateAll = New-Object System.Windows.Forms.Button
-$btnUpdateAll.Text = "⟳ Update ALL Installed Apps"
-$btnUpdateAll.Location = New-Object System.Drawing.Point(490, 160)
-$btnUpdateAll.Size = New-Object System.Drawing.Size(380, 55)
-$btnUpdateAll.BackColor = [System.Drawing.Color]::DarkGreen
-$btnUpdateAll.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
-$btnUpdateAll.Add_Click({
-    Set-Status "Updating ALL apps via Winget..."
-    Start-Process "cmd.exe" -ArgumentList "/c winget upgrade --all --accept-package-agreements --accept-source-agreements" -Wait
-    Set-Status "All apps updated."
-    [System.Windows.Forms.MessageBox]::Show("All apps have been updated!", "Success")
 })
 
 $labelInfo = New-Object System.Windows.Forms.Label
-$labelInfo.Text = "Tip: Select an app name then click Install or Update.`nPowered by Windows Package Manager (Winget)."
-$labelInfo.Location = New-Object System.Drawing.Point(490, 240)
+$labelInfo.Text = "Apps are downloaded directly from the custom GitHub repository (-Clean-Arab2).`nSelect an app and click Download & Install."
+$labelInfo.Location = New-Object System.Drawing.Point(490, 110)
 $labelInfo.Size = New-Object System.Drawing.Size(380, 50)
-$labelInfo.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$labelInfo.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 $labelInfo.ForeColor = [System.Drawing.Color]::LightGray
 
-$tabApps.Controls.AddRange(@($listBoxApps, $btnInstallApp, $btnUpdateApp, $btnUpdateAll, $labelInfo))
+$tabApps.Controls.AddRange(@($listBoxApps, $btnInstallApp, $labelInfo))
 
 # ==========================================
 # TAB 2: System Tweaks & Boost
@@ -353,16 +317,22 @@ $listStartup.Columns.Add("Command / Path", 520) | Out-Null
 
 function Load-Startup {
     $listStartup.Items.Clear()
-    @(@{H="HKCU";P="Software\Microsoft\Windows\CurrentVersion\Run"},@{H="HKLM";P="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"}) | ForEach-Object {
-        $rp = "$($_.H):\$($_.P)"
+    $paths = @(
+        @{H="HKCU";P="Software\Microsoft\Windows\CurrentVersion\Run"},
+        @{H="HKLM";P="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"}
+    )
+    foreach ($p in $paths) {
+        $rp = "$($p.H):\$($p.P)"
         if (Test-Path $rp) {
             $keys = Get-ItemProperty $rp -ErrorAction SilentlyContinue
             if ($keys) {
-                $keys.psobject.properties | Where-Object { $_.Name -notin @("PSPath","PSParentPath","PSChildName","PSDrive","PSProvider") } | ForEach-Object {
-                    $item = New-Object System.Windows.Forms.ListViewItem($_.Name)
-                    $item.SubItems.Add($_.H) | Out-Null  # BUG FIX: was $p.Hive
-                    $item.SubItems.Add($_.Value.ToString()) | Out-Null
-                    $listStartup.Items.Add($item) | Out-Null
+                foreach ($prop in $keys.psobject.properties) {
+                    if ($prop.Name -notin @("PSPath","PSParentPath","PSChildName","PSDrive","PSProvider")) {
+                        $item = New-Object System.Windows.Forms.ListViewItem($prop.Name)
+                        $item.SubItems.Add($p.H) | Out-Null
+                        $item.SubItems.Add($prop.Value.ToString()) | Out-Null
+                        $listStartup.Items.Add($item) | Out-Null
+                    }
                 }
             }
         }
